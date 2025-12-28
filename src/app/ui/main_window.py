@@ -30,6 +30,8 @@ class MainWindow(QMainWindow):
             scope=scope
         )
 
+        svc.ensure_automatic_logging()
+
         state = svc.get_logged_in_state()
 
         if not state.is_logged_in:

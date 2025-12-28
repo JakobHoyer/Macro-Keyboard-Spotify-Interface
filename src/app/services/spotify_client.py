@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
-import urllib.parse as up
+import threading
+import webbrowser
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse, parse_qs
 
 import spotipy
 from spotipy.oauth2 import SpotifyPKCE
@@ -44,7 +47,7 @@ class SpotifyService:
         client_id: str,
         redirect_uri: str,
         scope: str,
-        app_name: str = "MacroKeyboardSpotify"
+        app_name: str = "MacroKeyboardSpotifyInterface"
     ) -> None:
 
         self._client_id = client_id
@@ -73,6 +76,56 @@ class SpotifyService:
         """ Used for debugging token location."""
         return self._cache_path
     
+    def ensure_automatic_logging(self, host="127.0.0.1", port=8888, path="/callback"):
+        """
+        Upons up the redirect url, and fetches the code and inputs it automatically. The user
+        hereby only needs to login in the browser (or press agree).
+        It does this with a simple HTTP server that listens for the redirect.
+        """
+        if self._auth.get_cached_token():
+            return
+
+        code_holder = {"code": None}
+        done = threading.Event()
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                u = urlparse(self.path)
+                if u.path != path:
+                    self.send_response(404); self.end_headers(); return
+                qs = parse_qs(u.query)
+                code_holder["code"] = (qs.get("code") or [None])[0]
+
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(b"<h2>Spotify login OK</h2><p>Du kan lukke dette vindue.</p>")
+                done.set()
+
+            def log_message(self, *_):
+                pass  # mute console noise
+        
+        server = HTTPServer((host, port), Handler)
+
+        # Start server in background
+        t = threading.Thread(target=server.serve_forever, daemon=True)
+        t.start()
+
+        # Open login URL in browser
+        login_url = self._auth.get_authorize_url()
+        webbrowser.open(login_url)
+
+        # Wait for callback
+        done.wait(timeout=180)
+        server.shutdown()
+
+        code = code_holder["code"]
+        if not code:
+            raise RuntimeError("Login timeout eller ingen code modtaget")
+
+        # Exchange the code to token (written in cache_path)
+        self._auth.get_access_token(code)
+
 
     def get_logged_in_state(self) -> bool:
         """

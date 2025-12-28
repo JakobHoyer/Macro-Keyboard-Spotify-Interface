@@ -2,6 +2,7 @@ altgraph==0.17.5
 certifi==2025.11.12
 charset-normalizer==3.4.4
 idna==3.11
+-e git+ssh://git@github.com/JakobHoyer/Macro-Keyboard-Spotify-Interface.git@846b179b0070aeb02f0b37424009222a0d9e405f#egg=MacroKeyboardSpotifyInterface
 packaging==25.0
 platformdirs==4.5.1
 pyinstaller==6.17.0
