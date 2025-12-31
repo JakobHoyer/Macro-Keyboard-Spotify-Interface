@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 
 import threading
 import webbrowser
@@ -221,6 +221,19 @@ class SpotifyService:
         sp = self._ensure_client()
         sp.start_playback(device_id=device_id)
 
+    def toggle_pause_resume(self, device_id: Optional[str] = None) -> None:
+        """
+        Toggle pause/resume playback on the given device.
+        """
+        sp = self._ensure_client()
+        playback = sp.current_playback()
+        is_playing = playback.get("is_playing", False) if isinstance(playback, dict) else False
+
+        if is_playing:
+            sp.pause_playback(device_id=device_id)
+        else:
+            sp.start_playback(device_id=device_id)
+
     def logout(self) -> None:
         """
         Logout by deleting the cached token.
@@ -231,6 +244,19 @@ class SpotifyService:
         except Exception as e:
             raise RuntimeError(f"Failed to delete cache file: {e}") from e
 
+
+    def get_song_info(self) -> Optional[dict]:
+        """
+        Get information about the currently playing song.
+        """
+        sp = self._ensure_client()
+        playback = sp.current_playback()
+        if not playback or not isinstance(playback, dict):
+            return None
+        item = playback.get("item")
+        if not item or not isinstance(item, dict):
+            return None
+        return item
 
     def _ensure_client(self) -> spotipy.Spotify:
         """

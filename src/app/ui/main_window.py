@@ -1,51 +1,64 @@
-from PySide6.QtWidgets import QMainWindow, QLabel, QWidget, QVBoxLayout, QPushButton, QTextEdit, QLineEdit
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton
+from PySide6.QtCore import Signal, Qt
+from PySide6.QtGui import QPixmap
 
-from app.services.spotify_client import SpotifyService
+from app.core.actions import Action
 
 class MainWindow(QMainWindow):
+    action_requested = Signal(object)  # UI -> controller
+
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Macro Keyboard Spotify Interface")
-        container = QWidget()
-        self.setCentralWidget(container)
-        layout = QVBoxLayout(container)
-        button1 = QPushButton("DO IT!")
-        button1.clicked.connect(self.on_button1_clicked)
-        label1 = QLabel("Rammstein me")
-        label1.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label1)
-        layout.addWidget(button1)
+        self.setWindowTitle("Macro Spotify App")
 
+        root = QWidget()
+        layout = QVBoxLayout(root)
+
+        self.status = QLabel("Status: klar")
+        self.error = QLabel("")
+        self.error.setStyleSheet("color: red;")
+
+        self.cover = QLabel()
+        self.cover.setAlignment(Qt.AlignCenter)
+        self.cover.setMinimumHeight(200)  # så den har plads
+        layout.addWidget(self.cover)
+
+        btn1 = QPushButton("Play/Pause")
+        btn2 = QPushButton("Slot 1")
+        btn3 = QPushButton("Slot 2")
+
+        btn1.clicked.connect(lambda: self.action_requested.emit(Action.PLAY_PAUSE))
+        btn2.clicked.connect(lambda: self.action_requested.emit(Action.SLOT_1))
+        btn3.clicked.connect(lambda: self.action_requested.emit(Action.SLOT_2))
+
+        layout.addWidget(self.status)
+        layout.addWidget(self.error)
+        layout.addWidget(btn1)
+        layout.addWidget(btn2)
+        layout.addWidget(btn3)
+
+        self.setCentralWidget(root)
+        self._cover_pix = QPixmap()
+
+    def set_status(self, text: str) -> None:
+        self.status.setText(f"Status: {text}")
+
+    def set_error(self, text: str) -> None:
+        self.error.setText(text)
     
-    def on_button1_clicked(self) -> None:
-        client_id = "4075de68534e4c0c92d89a9c9c21d29f"
-        redirect_uri = "http://127.0.0.1:8888/callback"
-        scope = "user-read-playback-state user-modify-playback-state"
+    
+    def set_cover(self, pix: QPixmap) -> None:
+        self._cover_pix = pix
+        self._rescale_cover()
 
+    def resizeEvent(self, e):
+        self._rescale_cover()
+        super().resizeEvent(e)
 
-        svc = SpotifyService(
-            client_id=client_id,
-            redirect_uri=redirect_uri,
-            scope=scope
-        )
-
-        svc.ensure_automatic_logging()
-
-        state = svc.get_logged_in_state()
-
-        if not state.is_logged_in:
-            print("Please log in:")
-            print("Open this URL in your browser:")
-            print(state.login_url)
-            print("After logging in, paste the redirected URL here:")
-            redirected_url = input().strip()
-            svc.finish_login(redirected_url)
-            state = svc.get_logged_in_state()
-
-
-        devices = svc.list_devices()
-        if not devices:
-            print("No active Spotify devices found. Please start Spotify on one of your devices and try again.")
-        else:
-            svc.play_playlist(devices[0].id, "spotify:playlist:4zqPelMTbUfaSpAKWHux7M")
+    def _rescale_cover(self):
+        if self._cover_pix.isNull():
+            self.cover.clear()
+            return
+        self.cover.setPixmap(self._cover_pix.scaled(
+            self.cover.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+        ))
