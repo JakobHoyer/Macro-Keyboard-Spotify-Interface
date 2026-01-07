@@ -76,6 +76,7 @@ class SpotifyService:
         """ Used for debugging token location."""
         return self._cache_path
     
+
     def ensure_automatic_logging(self, host="127.0.0.1", port=8888, path="/callback"):
         """
         Upons up the redirect url, and fetches the code and inputs it automatically. The user
@@ -141,7 +142,8 @@ class SpotifyService:
             login_url=self._auth.get_authorize_url(),
             reason="No cached token found."
         )
-    
+
+
     def finish_login(self, redirected_url: str) -> None:
         """
         Finish loging by using the redirected url from the browser and
@@ -159,7 +161,8 @@ class SpotifyService:
         access_token = token_info["access_token"] if isinstance(token_info, dict) else token_info
         
         self._sp = spotipy.Spotify(auth=access_token)
-    
+
+
     def list_devices(self) -> List[SpotifyDevice]:
         """
         List available Spotify devices.
@@ -178,7 +181,8 @@ class SpotifyService:
             for d in devices
             if d.get("id")
         ]
-    
+
+
     def transfer_playback(self, device_id: str, force_play: bool = True) -> None:
         """
         Transfer playback to the given device.
@@ -186,13 +190,15 @@ class SpotifyService:
         sp = self._ensure_client()
         sp.transfer_playback(device_id=device_id, force_play=force_play)
 
+
     def play_track(self, device_id: str, track_uri: str) -> None:
         """
         Start playback of the given track URI on the given device.
         """
         sp = self._ensure_client()
         sp.start_playback(device_id=device_id, uris=[track_uri])
-    
+
+
     def play_playlist(self, device_id: str, playlist_uri: str) -> None:
         """
         Start playback of the given playlist URI on the given device.
@@ -200,13 +206,15 @@ class SpotifyService:
         sp = self._ensure_client()
         sp.start_playback(device_id=device_id, context_uri=playlist_uri)
 
+
     def play_uris(self, uris: List[str], device_id: str) -> None:
         """
         Start playback of the given list of URIs on the given device.
         """
         sp = self._ensure_client()
         sp.start_playback(device_id=device_id, uris=uris)
-    
+
+
     def pause(self, device_id: Optional[str] = None) -> None:
         """
         Pause playback on the given device.
@@ -214,12 +222,14 @@ class SpotifyService:
         sp = self._ensure_client()
         sp.pause_playback(device_id=device_id)
 
+
     def resume(self, device_id: Optional[str] = None) -> None:
         """
         Resume playback on the given device.
         """
         sp = self._ensure_client()
         sp.start_playback(device_id=device_id)
+
 
     def toggle_pause_resume(self, device_id: Optional[str] = None) -> None:
         """
@@ -257,6 +267,7 @@ class SpotifyService:
         if not item or not isinstance(item, dict):
             return None
         return item
+
 
     def _ensure_client(self) -> spotipy.Spotify:
         """

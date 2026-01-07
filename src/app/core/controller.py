@@ -27,6 +27,22 @@ class AppController:
         self.set_status = set_status
         self.set_error = set_error
         self.set_cover_url = set_cover_url
+        self._last_cover_url = ""
+
+
+    def refresh_playback(self) -> None:
+        try:
+            # change get_cover_url to get_song_info and then make get_cover_url have song as argument.
+            song = self.spotify.get_song_info()
+            if song:
+                self.set_status(f"Now playing: {song['name']} by {song['artists'][0]['name']}")
+                url = self.get_cover_url(song)
+                if url and url.startswith("http") and url != self._last_cover_url:
+                    self.set_cover_url(url)
+                    self._last_cover_url = url
+        except Exception as e:
+            self.set_error(f"Error refreshing playback: {e}")
+
 
     def handle_action(self, action: Action, source: str) -> None:
         try:
@@ -34,55 +50,41 @@ class AppController:
 
             if action == Action.PLAY_PAUSE:
                 self.spotify.toggle_pause_resume()
-                url = self.get_cover_url()
-                if url and url.startswith("http"):
-                    self.set_cover_url(url)
                 return
 
             if action in (Action.SLOT_1, Action.SLOT_2):
                 binding = self.bindings.get(action)
                 if not binding:
-                    self.set_error(f"Ingen binding for {action}")
+                    self.set_error(f"No binding for {action}")
                     return
 
                 # Sørg for at vi har device og den er aktiv (du kan gøre det smartere senere)
                 devices = self.spotify.list_devices()
 
                 if binding.type == "track":
-                    self.spotify.play_track(devices[0].id, binding.uri)
-                    self.set_cover_url(self.get_cover_url())
+                    self.spotify.play_track(devices[0].id, str(binding.uri))
                 elif binding.type == "playlist":
                     self.spotify.play_playlist(devices[0].id, str(binding.uri))
-                    url = self.get_cover_url()
-                    if url and url.startswith("http"):
-                        self.set_cover_url(url)
                 else:
-                    self.set_error(f"Ukendt binding type: {binding.type}")
+                    self.set_error(f"Unknown binding type: {binding.type}")
                 return
 
             if action == Action.NEXT:
                 self.spotify.next_track()
-                url = self.get_cover_url()
-                if url and url.startswith("http"):
-                    self.set_cover_url(url)
                 return
 
             if action == Action.PREV:
                 self.spotify.prev_track()
-                url = self.get_cover_url()
-                if url and url.startswith("http"):
-                    self.set_cover_url(url)
                 return
 
         except Exception as e:
-            self.set_error(f"Fejl: {e}")
+            self.set_error(f"Error handling action: {e}")
 
-    def get_cover_url(self) -> str:
-        song = self.spotify.get_song_info()
+
+    def get_cover_url(self, song: Optional[dict] = None) -> str:
         if song:
             images = song.get("album", {}).get("images", [])
             if images:
-                cover_url = images[0]["url"]  # største
-                print(f"Cover URL: {cover_url}")
+                cover_url = images[0]["url"]  # largest
                 return cover_url
         return ""
