@@ -1,18 +1,23 @@
 altgraph==0.17.5
 certifi==2025.11.12
 charset-normalizer==3.4.4
+evdev==1.9.2
 idna==3.11
--e git+ssh://git@github.com/JakobHoyer/Macro-Keyboard-Spotify-Interface.git@846b179b0070aeb02f0b37424009222a0d9e405f#egg=MacroKeyboardSpotifyInterface
+-e git+ssh://git@github.com/JakobHoyer/Macro-Keyboard-Spotify-Interface.git@b96139991ed8647dfb65de5f5a99b5f7edeed2c5#egg=MacroKeyboardSpotifyInterface
 packaging==25.0
 platformdirs==4.5.1
 pyinstaller==6.17.0
 pyinstaller-hooks-contrib==2025.11
+pynput==1.8.1
+pyserial==3.5
 PySide6==6.10.1
 PySide6_Addons==6.10.1
 PySide6_Essentials==6.10.1
+python-xlib==0.33
 redis==7.1.0
 requests==2.32.5
 setuptools==80.9.0
 shiboken6==6.10.1
+six==1.17.0
 spotipy==2.25.2
 urllib3==2.6.2
