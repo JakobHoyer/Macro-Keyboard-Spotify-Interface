@@ -5,7 +5,7 @@ from typing import Callable, Dict
 from pynput import keyboard
 
 from .base import InputBackend
-from ...core.actions import Action
+from ..core.actions import Action
 
 
 class HotkeyBackendPynput(InputBackend):

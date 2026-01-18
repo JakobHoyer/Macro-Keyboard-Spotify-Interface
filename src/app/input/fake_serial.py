@@ -14,7 +14,7 @@ class FakeSerialBackend(InputBackend):
     - backend oversætter til Action og emitter
     """
 
-    def __init__(self, mapping: Dict[str, Action]) -> None:
+    def __init__(self, mapping: Dict[Action, str]) -> None:
         self._mapping = mapping
         self._emit: Optional[Callable[[Action, str], None]] = None
         self._q: "queue.Queue[str]" = queue.Queue()

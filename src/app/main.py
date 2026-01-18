@@ -10,6 +10,7 @@ from app.core.controller import AppController, SlotBinding
 # fra dine egne filer
 from app.services.spotify_client import SpotifyService
 from app.input.fake_serial import FakeSerialBackend
+from app.input.hotkeys_pynput import HotkeyBackendPynput
 # fra app.input.hotkeys_pynput import HotkeyBackendPynput  # senere på Windows
 
 
@@ -71,17 +72,22 @@ def main():
 
     # 5) Backend (fake serial for Wayland test)
     backend = FakeSerialBackend({
-        "SLOT_1": Action.SLOT_1,
-        "SLOT_2": Action.SLOT_2,
-        "PLAY_PAUSE": Action.PLAY_PAUSE,
+        Action.SLOT_1: "SLOT_1",
+        Action.SLOT_2: "SLOT_2",
+        Action.PLAY_PAUSE: "PLAY_PAUSE",
     })
+
+    hotkey_backend = HotkeyBackendPynput({
+        Action.SLOT_1: "<ctrl>+<alt>+<f1>",
+        Action.SLOT_2: "<ctrl>+<alt>+<f2>",
+        Action.PLAY_PAUSE: "<ctrl>+<alt>+p",
+    })
+
     backend.start(lambda action, source: controller.handle_action(action, source))
+    hotkey_backend.start(lambda action, source: controller.handle_action(action, source))
 
     # 6) UI -> controller (knapper i UI)
     window.action_requested.connect(lambda a: controller.handle_action(a, "ui"))
-
-    # BONUS: knyt fake serial injection til UI test (du kan lave en knap senere)
-    #backend.inject("SLOT_1")
 
     window.show()
     spotify.ensure_automatic_logging()
