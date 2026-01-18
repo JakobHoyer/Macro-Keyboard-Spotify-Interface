@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushBu
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPixmap
 
+from app.ui.background_widget import BackgroundWidget
 from app.core.actions import Action
 
 class MainWindow(QMainWindow):
@@ -11,16 +12,17 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Macro Spotify App")
 
-        root = QWidget()
-        layout = QVBoxLayout(root)
+        root = BackgroundWidget("assets/images/knight-at-fire2.png")
+        layout = root.layout
 
         self.status = QLabel("Status: klar")
+        self.status.setStyleSheet("color: white;")
         self.error = QLabel("")
         self.error.setStyleSheet("color: red;")
 
         self.cover = QLabel()
         self.cover.setAlignment(Qt.AlignCenter)
-        self.cover.setMinimumHeight(200)  # så den har plads
+        self.cover.setMinimumHeight(180)  # så den har plads
         layout.addWidget(self.cover)
 
         btn1 = QPushButton("Play/Pause")
