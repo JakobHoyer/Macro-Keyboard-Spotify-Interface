@@ -35,7 +35,7 @@ class AppController:
             # change get_cover_url to get_song_info and then make get_cover_url have song as argument.
             song = self.spotify.get_song_info()
             if song:
-                self.set_status(f"Now playing: {song['name']} by {song['artists'][0]['name']}")
+                self.set_status(f"{song['name']}  -  {song['artists'][0]['name']}")
                 url = self.get_cover_url(song)
                 if url and url.startswith("http") and url != self._last_cover_url:
                     self.set_cover_url(url)

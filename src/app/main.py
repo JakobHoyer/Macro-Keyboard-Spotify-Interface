@@ -40,7 +40,7 @@ def main():
         redirect_uri="http://127.0.0.1:8888/callback",
         scope="user-read-playback-state user-modify-playback-state",
     )
-
+    spotify.ensure_automatic_logging # login
 
     # Setup bindings. This will be done from a settings / binding window later
     bindings = {
@@ -61,8 +61,8 @@ def main():
     timer = QTimer()
     timer.setInterval(700)
     timer.timeout.connect(controller.refresh_playback)
+    timer.timeout.connect(spotify.ensure_automatic_logging)
     timer.start()
-
 
     # Start backends
     backend = FakeSerialBackend({
@@ -87,7 +87,6 @@ def main():
     window.resize(320*3, 180*3)
     window.show()
     
-    spotify.ensure_automatic_logging()
     exit_code = app.exec()
 
     backend.stop()
