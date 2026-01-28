@@ -244,6 +244,23 @@ class SpotifyService:
         else:
             sp.start_playback(device_id=device_id)
 
+
+    def next(self, device_id: Optional[str] = None) -> None:
+        """
+        Skip to the next track on the given device.
+        """
+        sp = self._ensure_client()
+        sp.next_track(device_id=device_id)
+
+
+    def previous(self, device_id: Optional[str] = None) -> None:
+        """
+        Skip to the previous track on the given device.
+        """
+        sp = self._ensure_client()
+        sp.previous_track(device_id=device_id)
+
+
     def logout(self) -> None:
         """
         Logout by deleting the cached token.

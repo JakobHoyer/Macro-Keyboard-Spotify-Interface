@@ -4,8 +4,8 @@ from PySide6.QtCore import QTimer
 
 from app.ui.main_window import MainWindow
 from app.ui.image_loader import ImageLoader
-from app.core.actions import Action
-from app.core.controller import AppController, SlotBinding
+from app.core.actions import ActionEvent
+from app.core.controller import AppController, Binding
 from app.services.spotify_client import SpotifyService
 from app.input.fake_serial import FakeSerialBackend
 from app.input.hotkeys_pynput import HotkeyBackendPynput
@@ -44,8 +44,8 @@ def main():
 
     # Setup bindings. This will be done from a settings / binding window later
     bindings = {
-        Action.SLOT_1: SlotBinding(type="playlist", uri="spotify:playlist:4zqPelMTbUfaSpAKWHux7M"),
-        Action.SLOT_2: SlotBinding(type="track", uri="spotify:track:6woV8uWxn7rcLZxJKYruS1"),
+        (ActionEvent.SLOT, 1): Binding(type="playlist", uri="spotify:playlist:4zqPelMTbUfaSpAKWHux7M"),
+        (ActionEvent.SLOT, 2): Binding(type="track", uri="spotify:track:6woV8uWxn7rcLZxJKYruS1"),
     }
 
 
@@ -65,16 +65,20 @@ def main():
     timer.start()
 
     # Start backends
-    backend = FakeSerialBackend({
-        Action.SLOT_1: "SLOT_1",
-        Action.SLOT_2: "SLOT_2",
-        Action.PLAY_PAUSE: "PLAY_PAUSE",
+    backend = FakeSerialBackend({ # These should be redefined later from bindings
+        (ActionEvent.SLOT, 1): "SLOT_1",
+        (ActionEvent.SLOT, 2): "SLOT_2",
+        ActionEvent.PLAY_PAUSE: "PLAY_PAUSE",
+        ActionEvent.NEXT: "NEXT",
+        ActionEvent.PREV: "PREV",
     })
 
-    hotkey_backend = HotkeyBackendPynput({
-        Action.SLOT_1: "<ctrl>+<alt>+<f1>",
-        Action.SLOT_2: "<ctrl>+<alt>+<f2>",
-        Action.PLAY_PAUSE: "<ctrl>+<alt>+p",
+    hotkey_backend = HotkeyBackendPynput({ # These should be redefined later from bindings
+        (ActionEvent.SLOT, 1): "<ctrl>+<alt>+<f1>",
+        (ActionEvent.SLOT, 2): "<ctrl>+<alt>+<f2>",
+        ActionEvent.PLAY_PAUSE: "<ctrl>+<alt>+p",
+        ActionEvent.NEXT: "<ctrl>+<alt>+right",
+        ActionEvent.PREV: "<ctrl>+<alt>+left",
     })
 
     backend.start(lambda action, source: controller.handle_action(action, source))

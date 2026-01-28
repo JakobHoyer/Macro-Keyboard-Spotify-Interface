@@ -1,10 +1,9 @@
-from _ctypes import alignment
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSizePolicy
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPixmap
 
 from app.ui.background_widget import BackgroundWidget
-from app.core.actions import Action
+from app.core.actions import ActionEvent
 
 class MainWindow(QMainWindow):
     action_requested = Signal(object)  # UI -> controller
@@ -44,9 +43,9 @@ class MainWindow(QMainWindow):
         btn_play.setFixedSize(68, 40)
         btn_next.setFixedSize(52, 40)
 
-        btn_prev.clicked.connect(lambda: self.action_requested.emit(Action.SLOT_1))
-        btn_play.clicked.connect(lambda: self.action_requested.emit(Action.PLAY_PAUSE))
-        btn_next.clicked.connect(lambda: self.action_requested.emit(Action.SLOT_2))
+        btn_prev.clicked.connect(lambda: self.action_requested.emit(ActionEvent.PREV))
+        btn_play.clicked.connect(lambda: self.action_requested.emit(ActionEvent.PLAY_PAUSE))
+        btn_next.clicked.connect(lambda: self.action_requested.emit(ActionEvent.NEXT))
 
         #outer_layout.addStretch(1)
         panel.setFixedWidth(180)

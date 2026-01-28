@@ -1,14 +1,14 @@
+from dataclasses import dataclass
 from enum import Enum
+from typing import Optional
 
-class Action(str, Enum):
+class ActionKind(str, Enum):
     PLAY_PAUSE = "play_pause"
     NEXT = "next"
     PREV = "prev"
-    SLOT_1 = "slot_1"
-    SLOT_2 = "slot_2"
-    SLOT_3 = "slot_3"
-    SLOT_4 = "slot_4"
-    SLOT_5 = "slot_5"
-    SLOT_6 = "slot_6"
-    SLOT_7 = "slot_7"
-    SLOT_8 = "slot_8"
+    SLOT = "slot"
+
+@dataclass(frozen=True)
+class ActionEvent:
+    kind: ActionKind
+    slot_id: Optional[int] = None

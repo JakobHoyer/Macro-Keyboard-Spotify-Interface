@@ -5,7 +5,7 @@ from typing import Callable, Dict
 from pynput import keyboard
 
 from .base import InputBackend
-from ..core.actions import Action
+from ..core.actions import ActionEvent
 
 
 class HotkeyBackendPynput(InputBackend):
@@ -14,7 +14,7 @@ class HotkeyBackendPynput(InputBackend):
     On Linux it's mainly viable on X11. On Wayland it may not work.
     """
 
-    def __init__(self, bindings: Dict[Action, str]) -> None:
+    def __init__(self, bindings: Dict[ActionEvent, str]) -> None:
         """
         bindings example:
           {
@@ -31,7 +31,7 @@ class HotkeyBackendPynput(InputBackend):
         # Linux: only reliably on X11
         return os.environ.get("XDG_SESSION_TYPE", "").lower() != "wayland"
 
-    def start(self, emit: Callable[[Action, str], None]) -> None:
+    def start(self, emit: Callable[[ActionEvent, str], None]) -> None:
         if not self.is_supported():
             raise RuntimeError("Hotkey backend not supported in this environment")
 

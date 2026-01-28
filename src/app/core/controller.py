@@ -1,23 +1,27 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
-from .actions import Action
+from .actions import ActionEvent, ActionKind
 
 StatusFn = Callable[[str], None]   # UI kan sætte en status label
 ErrorFn  = Callable[[str], None]
 CoverUrlFn = Callable[[str], None]  # UI kan sætte cover via URL
 
 @dataclass
-class SlotBinding:
+class Binding:
     type: str  # "track" / "playlist"
     uri: str
+    keybind: str = "" # Optional keybind
+    name: str = "" # Optional name for display purposes
+
+
 
 class AppController:
     def __init__(
         self,
         spotify_service,
-        bindings: Dict[Action, SlotBinding],
+        bindings: Dict[ActionEvent, Binding],
         set_status: StatusFn,
         set_error: ErrorFn,
         set_cover_url: CoverUrlFn,
@@ -44,41 +48,39 @@ class AppController:
             self.set_error(f"Error refreshing playback: {e}")
 
 
-    def handle_action(self, action: Action, source: str) -> None:
+    def handle_action(self, action: ActionEvent, source: str) -> None:
         try:
             self.set_status(f"Action: {action} (from {source})")
 
-            if action == Action.PLAY_PAUSE:
+            if action.kind == ActionKind.PLAY_PAUSE:
                 self.spotify.toggle_pause_resume()
                 return
 
-            if action in (Action.SLOT_1, Action.SLOT_2):
-                binding = self.bindings.get(action)
+            if action.kind == ActionKind.NEXT:
+                self.spotify.next()
+                return
+
+            if action.kind == ActionKind.PREV:
+                self.spotify.previous()
+                return
+
+            if action.kind == ActionKind.SLOT:
+                if action.slot_id is None:
+                    return
+                binding = self.bindings.get(("slot", action.slot_id))
                 if not binding:
-                    self.set_error(f"No binding for {action}")
+                    self.set_error(f"No binding for slot {action.slot_id}")
                     return
 
-                # Sørg for at vi har device og den er aktiv (du kan gøre det smartere senere)
-                devices = self.spotify.list_devices()
-
-                if binding.type == "track":
-                    self.spotify.play_track(devices[0].id, str(binding.uri))
-                elif binding.type == "playlist":
-                    self.spotify.play_playlist(devices[0].id, str(binding.uri))
-                else:
-                    self.set_error(f"Unknown binding type: {binding.type}")
-                return
-
-            if action == Action.NEXT:
-                self.spotify.next_track()
-                return
-
-            if action == Action.PREV:
-                self.spotify.prev_track()
+                self._play_binding(binding)
                 return
 
         except Exception as e:
             self.set_error(f"Error handling action: {e}")
+
+
+    def update_bindings(self, new_bindings: Dict[ActionEvent, Binding]) -> None:
+        self.bindings = new_bindings
 
 
     def get_cover_url(self, song: Optional[dict] = None) -> str:
@@ -88,3 +90,14 @@ class AppController:
                 cover_url = images[0]["url"]  # largest
                 return cover_url
         return ""
+
+
+    def _play_binding(self, binding: Binding) -> None:
+        if binding.type == "track":
+            self.spotify.play_track(binding.uri)
+        elif binding.type == "playlist":
+            self.spotify.play_playlist(binding.uri)
+        elif binding.type == "uris":
+            uris = binding.uri.split(",")
+            self.spotify.play_uris(uris)
+        # potentially add album here.

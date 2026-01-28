@@ -4,7 +4,7 @@ import queue
 from typing import Callable, Dict, Optional
 
 from .base import InputBackend
-from app.core.actions import Action
+from app.core.actions import ActionEvent
 
 
 class FakeSerialBackend(InputBackend):
@@ -14,9 +14,9 @@ class FakeSerialBackend(InputBackend):
     - backend oversætter til Action og emitter
     """
 
-    def __init__(self, mapping: Dict[Action, str]) -> None:
+    def __init__(self, mapping: Dict[ActionEvent, str]) -> None:
         self._mapping = mapping
-        self._emit: Optional[Callable[[Action, str], None]] = None
+        self._emit: Optional[Callable[[ActionEvent, str], None]] = None
         self._q: "queue.Queue[str]" = queue.Queue()
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
@@ -24,7 +24,7 @@ class FakeSerialBackend(InputBackend):
     def is_supported(self) -> bool:
         return True
 
-    def start(self, emit: Callable[[Action, str], None]) -> None:
+    def start(self, emit: Callable[[ActionEvent, str], None]) -> None:
         self._emit = emit
         self._stop.clear()
 
