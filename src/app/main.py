@@ -4,7 +4,7 @@ from PySide6.QtCore import QTimer
 
 from app.ui.main_window import MainWindow
 from app.ui.image_loader import ImageLoader
-from app.core.actions import ActionEvent
+from app.core.actions import ActionEvent, ActionKind
 from app.core.controller import AppController, Binding
 from app.services.spotify_client import SpotifyService
 from app.input.fake_serial import FakeSerialBackend
@@ -40,19 +40,18 @@ def main():
         redirect_uri="http://127.0.0.1:8888/callback",
         scope="user-read-playback-state user-modify-playback-state",
     )
-    spotify.ensure_automatic_logging # login
 
     # Setup bindings. This will be done from a settings / binding window later
-    bindings = {
-        (ActionEvent.SLOT, 1): Binding(type="playlist", uri="spotify:playlist:4zqPelMTbUfaSpAKWHux7M"),
-        (ActionEvent.SLOT, 2): Binding(type="track", uri="spotify:track:6woV8uWxn7rcLZxJKYruS1"),
+    control_bindings = {
+        1: Binding(type="playlist", uri="spotify:playlist:4zqPelMTbUfaSpAKWHux7M"),
+        2: Binding(type="track", uri="spotify:track:6woV8uWxn7rcLZxJKYruS1"),
     }
 
 
     # Start action and ui controller
     controller = AppController(
         spotify_service=spotify,
-        bindings=bindings,
+        control_bindings=control_bindings,
         set_status=window.set_status,
         set_error=window.set_error,
         set_cover_url=set_cover_url,
@@ -66,19 +65,19 @@ def main():
 
     # Start backends
     backend = FakeSerialBackend({ # These should be redefined later from bindings
-        (ActionEvent.SLOT, 1): "SLOT_1",
-        (ActionEvent.SLOT, 2): "SLOT_2",
-        ActionEvent.PLAY_PAUSE: "PLAY_PAUSE",
-        ActionEvent.NEXT: "NEXT",
-        ActionEvent.PREV: "PREV",
+        ActionEvent(ActionKind.SLOT, 1): "SLOT_1",
+        ActionEvent(ActionKind.SLOT, 2): "SLOT_2",
+        ActionEvent(ActionKind.PLAY_PAUSE): "PLAY_PAUSE",
+        ActionEvent(ActionKind.NEXT): "NEXT",
+        ActionEvent(ActionKind.PREV): "PREV",
     })
 
     hotkey_backend = HotkeyBackendPynput({ # These should be redefined later from bindings
-        (ActionEvent.SLOT, 1): "<ctrl>+<alt>+<f1>",
-        (ActionEvent.SLOT, 2): "<ctrl>+<alt>+<f2>",
-        ActionEvent.PLAY_PAUSE: "<ctrl>+<alt>+p",
-        ActionEvent.NEXT: "<ctrl>+<alt>+right",
-        ActionEvent.PREV: "<ctrl>+<alt>+left",
+        ActionEvent(ActionKind.SLOT, 1) : "<ctrl>+<alt>+<f1>",
+        ActionEvent(ActionKind.SLOT, 2): "<ctrl>+<alt>+<f2>",
+        ActionEvent(ActionKind.PLAY_PAUSE): "<ctrl>+<alt>+p",
+        ActionEvent(ActionKind.NEXT): "<ctrl>+<alt>+<right>",
+        ActionEvent(ActionKind.PREV): "<ctrl>+<alt>+<left>", 
     })
 
     backend.start(lambda action, source: controller.handle_action(action, source))

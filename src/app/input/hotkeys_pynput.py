@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from typing import Callable, Dict
-
+from functools import partial
 from pynput import keyboard
 
 from .base import InputBackend
@@ -18,8 +18,8 @@ class HotkeyBackendPynput(InputBackend):
         """
         bindings example:
           {
-            Action.PLAY_PAUSE: "<ctrl>+<alt>+p",
-            Action.TRACK_1: "F13",
+            ActionEvent(ActionKind.SLOT, 1): "<ctrl>+<alt>+<f1>",
+            ActionEvent(ActionKind.PLAY_PAUSE): "<f13>",
           }
         """
         self._bindings = bindings
@@ -35,7 +35,7 @@ class HotkeyBackendPynput(InputBackend):
         if not self.is_supported():
             raise RuntimeError("Hotkey backend not supported in this environment")
 
-        hotkey_map = {hotkey: (lambda a=action: emit(a, "hotkeys")) for action, hotkey in self._bindings.items()}
+        hotkey_map = {hotkey: partial(emit, action, "hotkeys") for action, hotkey in self._bindings.items()}
 
         # GlobalHotKeys expects strings like "<ctrl>+<alt>+p"
         self._listener = keyboard.GlobalHotKeys(hotkey_map)

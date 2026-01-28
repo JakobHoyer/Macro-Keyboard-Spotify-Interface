@@ -128,7 +128,7 @@ class SpotifyService:
         self._auth.get_access_token(code)
 
 
-    def get_logged_in_state(self) -> bool:
+    def get_logged_in_state(self) -> LoginState: 
         """
         Check if user is logged in (i.e. if we have a cached token).
         """
@@ -197,6 +197,13 @@ class SpotifyService:
         """
         sp = self._ensure_client()
         sp.start_playback(device_id=device_id, uris=[track_uri])
+    
+
+    def play_track_auto(self, track_uri: str) -> None:
+        """
+        Start playback of the given track URI on an available device
+        """
+        self.play_track(self._pick_device_id(), track_uri)
 
 
     def play_playlist(self, device_id: str, playlist_uri: str) -> None:
@@ -207,12 +214,26 @@ class SpotifyService:
         sp.start_playback(device_id=device_id, context_uri=playlist_uri)
 
 
+    def play_playlist_auto(self, playlist_uri: str) -> None:
+        """
+        Start playback of the given playlist URI on an available device.
+        """
+        self.play_playlist(self._pick_device_id(), playlist_uri)
+
+
     def play_uris(self, uris: List[str], device_id: str) -> None:
         """
         Start playback of the given list of URIs on the given device.
         """
         sp = self._ensure_client()
         sp.start_playback(device_id=device_id, uris=uris)
+
+
+    def play_uris_auto(self, uris: List[str]) -> None:
+        """
+        Start playback of the given list of URIs on an available device.
+        """
+        self.play_uris(self._pick_device_id(), uris)
 
 
     def pause(self, device_id: Optional[str] = None) -> None:
@@ -223,12 +244,20 @@ class SpotifyService:
         sp.pause_playback(device_id=device_id)
 
 
+    def pause_auto(self) -> None:
+        self.pause(self._pick_device_id())
+
+
     def resume(self, device_id: Optional[str] = None) -> None:
         """
         Resume playback on the given device.
         """
         sp = self._ensure_client()
         sp.start_playback(device_id=device_id)
+    
+
+    def resume_auto(self) -> None:
+        self.resume(self._pick_device_id())
 
 
     def toggle_pause_resume(self, device_id: Optional[str] = None) -> None:
@@ -245,6 +274,10 @@ class SpotifyService:
             sp.start_playback(device_id=device_id)
 
 
+    def toggle_pause_resume_auto(self) -> None:
+        self.toggle_pause_resume(self._pick_device_id())
+
+
     def next(self, device_id: Optional[str] = None) -> None:
         """
         Skip to the next track on the given device.
@@ -253,12 +286,20 @@ class SpotifyService:
         sp.next_track(device_id=device_id)
 
 
+    def next_auto(self) -> None:
+        self.next(self._pick_device_id())
+
+
     def previous(self, device_id: Optional[str] = None) -> None:
         """
         Skip to the previous track on the given device.
         """
         sp = self._ensure_client()
         sp.previous_track(device_id=device_id)
+
+
+    def previou_auto(self) -> None:
+        self.previous(self._pick_device_id())
 
 
     def logout(self) -> None:
@@ -301,3 +342,11 @@ class SpotifyService:
         access_token = token_info["access_token"] if isinstance(token_info, dict) else token_info
         self._sp = spotipy.Spotify(auth=access_token)
         return self._sp
+    
+
+    def _pick_device_id(self) -> str:
+        devices = self.list_devices()
+        if not devices:
+            raise RuntimeError("No Spotify devices available")
+        active = next((d for d in devices if d.is_active), None)
+        return (active or devices[0]).id

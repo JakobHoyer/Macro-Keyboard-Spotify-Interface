@@ -3,7 +3,7 @@ from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPixmap
 
 from app.ui.background_widget import BackgroundWidget
-from app.core.actions import ActionEvent
+from app.core.actions import ActionEvent, ActionKind
 
 class MainWindow(QMainWindow):
     action_requested = Signal(object)  # UI -> controller
@@ -43,9 +43,9 @@ class MainWindow(QMainWindow):
         btn_play.setFixedSize(68, 40)
         btn_next.setFixedSize(52, 40)
 
-        btn_prev.clicked.connect(lambda: self.action_requested.emit(ActionEvent.PREV))
-        btn_play.clicked.connect(lambda: self.action_requested.emit(ActionEvent.PLAY_PAUSE))
-        btn_next.clicked.connect(lambda: self.action_requested.emit(ActionEvent.NEXT))
+        btn_prev.clicked.connect(lambda: self.action_requested.emit(ActionEvent(ActionKind.PREV)))
+        btn_play.clicked.connect(lambda: self.action_requested.emit(ActionEvent(ActionKind.PLAY_PAUSE)))
+        btn_next.clicked.connect(lambda: self.action_requested.emit(ActionEvent(ActionKind.NEXT)))
 
         #outer_layout.addStretch(1)
         panel.setFixedWidth(180)

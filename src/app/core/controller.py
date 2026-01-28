@@ -12,7 +12,6 @@ CoverUrlFn = Callable[[str], None]  # UI kan sætte cover via URL
 class Binding:
     type: str  # "track" / "playlist"
     uri: str
-    keybind: str = "" # Optional keybind
     name: str = "" # Optional name for display purposes
 
 
@@ -21,13 +20,13 @@ class AppController:
     def __init__(
         self,
         spotify_service,
-        bindings: Dict[ActionEvent, Binding],
+        control_bindings: Dict[int, Binding],
         set_status: StatusFn,
         set_error: ErrorFn,
         set_cover_url: CoverUrlFn,
     ) -> None:
         self.spotify = spotify_service
-        self.bindings = bindings
+        self.control_bindings = control_bindings
         self.set_status = set_status
         self.set_error = set_error
         self.set_cover_url = set_cover_url
@@ -50,24 +49,22 @@ class AppController:
 
     def handle_action(self, action: ActionEvent, source: str) -> None:
         try:
-            self.set_status(f"Action: {action} (from {source})")
-
             if action.kind == ActionKind.PLAY_PAUSE:
-                self.spotify.toggle_pause_resume()
+                self.spotify.toggle_pause_resume_auto()
                 return
 
             if action.kind == ActionKind.NEXT:
-                self.spotify.next()
+                self.spotify.next_auto()
                 return
 
             if action.kind == ActionKind.PREV:
-                self.spotify.previous()
+                self.spotify.previous_auto()
                 return
 
             if action.kind == ActionKind.SLOT:
                 if action.slot_id is None:
                     return
-                binding = self.bindings.get(("slot", action.slot_id))
+                binding = self.bindings.get(action.slot_id)
                 if not binding:
                     self.set_error(f"No binding for slot {action.slot_id}")
                     return
@@ -79,8 +76,8 @@ class AppController:
             self.set_error(f"Error handling action: {e}")
 
 
-    def update_bindings(self, new_bindings: Dict[ActionEvent, Binding]) -> None:
-        self.bindings = new_bindings
+    def update_bindings(self, new_control_bindings: Dict[int, Binding]) -> None:
+        self.control_bindings = new_control_bindings
 
 
     def get_cover_url(self, song: Optional[dict] = None) -> str:
@@ -94,10 +91,10 @@ class AppController:
 
     def _play_binding(self, binding: Binding) -> None:
         if binding.type == "track":
-            self.spotify.play_track(binding.uri)
+            self.spotify.play_track_auto(binding.uri)
         elif binding.type == "playlist":
-            self.spotify.play_playlist(binding.uri)
+            self.spotify.play_playlist_auto(binding.uri)
         elif binding.type == "uris":
             uris = binding.uri.split(",")
-            self.spotify.play_uris(uris)
+            self.spotify.play_uris_auto(uris)
         # potentially add album here.
