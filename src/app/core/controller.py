@@ -48,6 +48,9 @@ class AppController:
 
 
     def handle_action(self, action: ActionEvent, source: str) -> None:
+        """
+        Handles any input from any backend. it has to have source for some reason
+        """
         try:
             if action.kind == ActionKind.PLAY_PAUSE:
                 self.spotify.toggle_pause_resume_auto()
@@ -62,9 +65,11 @@ class AppController:
                 return
 
             if action.kind == ActionKind.SLOT:
+                print(f"slot :{action.kind, action.slot_id}")
                 if action.slot_id is None:
                     return
-                binding = self.bindings.get(action.slot_id)
+                binding = self.control_bindings.get(action.slot_id)
+                print(binding)
                 if not binding:
                     self.set_error(f"No binding for slot {action.slot_id}")
                     return
