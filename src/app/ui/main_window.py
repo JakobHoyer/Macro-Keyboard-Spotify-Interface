@@ -1,8 +1,10 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSizePolicy
+from PySide6.QtWidgets import QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSizePolicy
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPixmap
 
 from app.ui.background_widget import BackgroundWidget
+from app.ui.player_screen import PlayerScreen
+from app.ui.bindings_screen import BindingsScreen
 from app.core.actions import ActionEvent, ActionKind
 
 class MainWindow(QMainWindow):
@@ -13,88 +15,45 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Macro Spotify App")
 
         root = BackgroundWidget("assets/images/knight-at-fire2.png")
-        layout = root.layout
-        content = QWidget()
-        layout.addWidget(content)
-
-        outer_layout = QHBoxLayout(content)
-        outer_layout.setContentsMargins(2, 2, 2, 2)
-        
-        panel = QWidget()
-        buttons_layout = QHBoxLayout()
-
-        self.status = QLabel("Ready")
-        self.status.setStyleSheet("color: white;")
-        self.status.setWordWrap(True)
-        self.status.setAlignment(Qt.AlignCenter)
-
-        self.error = QLabel("")
-        self.error.setStyleSheet("color: red;")
-
-        self.cover = QLabel()
-        self.cover.setAlignment(Qt.AlignCenter)
-        self.cover.setFixedSize(180, 180)
-
-        btn_prev = QPushButton("◀")
-        btn_play = QPushButton("⏯")
-        btn_next = QPushButton("▶")
-
-        btn_prev.setFixedSize(52, 40)
-        btn_play.setFixedSize(68, 40)
-        btn_next.setFixedSize(52, 40)
-
-        btn_prev.clicked.connect(lambda: self.action_requested.emit(ActionEvent(ActionKind.PREV)))
-        btn_play.clicked.connect(lambda: self.action_requested.emit(ActionEvent(ActionKind.PLAY_PAUSE)))
-        btn_next.clicked.connect(lambda: self.action_requested.emit(ActionEvent(ActionKind.NEXT)))
-
-        #outer_layout.addStretch(1)
-        panel.setFixedWidth(180)
-        panel_layout = QVBoxLayout(panel)
-        panel_layout.addStretch()
-        panel_layout.setSpacing(6)
-        panel_layout.setContentsMargins(0, 0, 0, 0)
-
-        buttons_layout.setSpacing(6)
-        buttons_layout.addWidget(btn_prev)
-        buttons_layout.addWidget(btn_play)
-        buttons_layout.addWidget(btn_next)
-        buttons_layout.setAlignment(Qt.AlignCenter)
-
-        panel_layout.addWidget(self.status)
-        panel_layout.addWidget(self.cover, alignment=Qt.AlignCenter)
-        panel_layout.addLayout(buttons_layout)
-        outer_layout.addWidget(panel)
-        outer_layout.addStretch(1)
-
         self.setCentralWidget(root)
-        self._cover_pix = QPixmap()
+
+        change_screen_button = QPushButton("Switch")
+        change_screen_button.setFixedSize(50, 42)
+        change_screen_button.clicked.connect(self.switch_screen)
+        root.layout.addWidget(change_screen_button, alignment=Qt.AlignTop | Qt.AlignRight)
+
+        self.screen = QStackedWidget()
+        root.layout.addWidget(self.screen)
+
+        self.player_screen = PlayerScreen()
+        self.screen.addWidget(self.player_screen)
+
+        self.bindings_screen = BindingsScreen()
+        self.screen.addWidget(self.bindings_screen)
+
+        self.player_screen.action_requested.connect(self.action_requested.emit)
 
 
     def set_status(self, text: str) -> None:
-        self.status.setText(f"{text}")
+        self.player_screen.set_status(f"{text}")
 
 
     def set_error(self, text: str) -> None:
-        self.error.setText(text)
+        self.player_screen.set_error(text)
 
 
     def set_cover(self, pix: QPixmap) -> None:
-        self._cover_pix = pix
-        self._rescale_cover()
+        self.player_screen.set_cover(pix)
 
 
-    def resizeEvent(self, e):
-        self._rescale_cover()
-        super().resizeEvent(e)
+    def switch_screen(self) -> None:
+        if self.screen.currentWidget() == self.player_screen:
+            self.show_bindings_screen()
+        else:
+            self.show_player_screen()
 
+    def show_player_screen(self) -> None:
+        self.screen.setCurrentWidget(self.player_screen)
 
-    def _rescale_cover(self):
-        if self._cover_pix.isNull():
-            self.cover.clear()
-            return
-        self.cover.setPixmap(
-            self._cover_pix.scaled(
-                self.cover.size(), 
-                Qt.KeepAspectRatio, 
-                Qt.SmoothTransformation
-        ))
+    def show_bindings_screen(self) -> None:
+        self.screen.setCurrentWidget(self.bindings_screen)
