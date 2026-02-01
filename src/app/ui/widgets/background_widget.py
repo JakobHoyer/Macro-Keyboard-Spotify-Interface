@@ -1,12 +1,12 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtGui import QPainter, QPixmap, QColor
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt
 from pathlib import Path
 
 class BackgroundWidget(QWidget):
     def __init__(self, image_path: str, parent=None):
         super().__init__(parent)
-        proj_dir = Path(__file__).parent.parent.parent # src
+        proj_dir = Path(__file__).parent.parent.parent.parent # src
         total_path = Path(proj_dir / image_path).as_posix().replace("\\", "/")
         
         self._bg = QPixmap(total_path)

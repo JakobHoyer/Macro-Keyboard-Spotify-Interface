@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QMainWindow, QStackedWidget, QWidget, QVBoxLayout,
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPixmap
 
-from app.ui.background_widget import BackgroundWidget
+from app.ui.widgets.background_widget import BackgroundWidget
 from app.ui.player_screen import PlayerScreen
 from app.ui.bindings_screen import BindingsScreen
 from app.core.actions import ActionEvent, ActionKind
