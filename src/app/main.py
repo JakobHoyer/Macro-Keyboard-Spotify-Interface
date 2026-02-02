@@ -5,6 +5,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
 from pathlib import Path
 
+from app.config.paths import paths
 from app.ui.main_window import MainWindow
 from app.ui.image_loader import ImageLoader
 from app.core.actions import ActionEvent, ActionKind
@@ -15,12 +16,14 @@ from app.input.hotkeys_pynput import HotkeyBackendPynput
 
 
 def main():
-    set_app_id("Jakob.MacroKeyboardSpotifyInterface")
+    set_app_id("JakobHoyer.MacroKeyboardSpotifyInterface")
     app = QApplication(sys.argv)
     # app icon might be redundant with main window icon
     icon_path = Path(__file__).parent.parent.parent / "assets" / "ico" / "lute.ico"
     app.setWindowIcon(QIcon(str(icon_path)))
     window = MainWindow()
+
+    paths.ensure_directories()
 
     # image loader
     image_loader = ImageLoader()

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+#from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import QObject, Signal, QUrl
@@ -12,8 +12,8 @@ from PySide6.QtNetwork import (
     QNetworkReply,
 )
 
-from platformdirs import user_cache_dir
-
+#from platformdirs import user_cache_dir
+from app.config.paths import paths
 
 class ImageLoader(QObject):
     loaded = Signal(str, QPixmap)   # (url, pixmap)
@@ -25,14 +25,18 @@ class ImageLoader(QObject):
         self.nam = QNetworkAccessManager(self)
 
         # Disk cache med max størrelse (evicter automatisk)
-        cache_dir = Path(user_cache_dir("macro-spotify-app")) / "image_cache"
-        cache_dir.mkdir(parents=True, exist_ok=True)
+        # cache_dir = Path(user_cache_dir("macro-spotify-app")) / "image_cache"
+        # cache_dir.mkdir(parents=True, exist_ok=True)
 
         disk_cache = QNetworkDiskCache(self)
-        disk_cache.setCacheDirectory(str(cache_dir))
-        disk_cache.setMaximumCacheSize(max_cache_mb * 1024 * 1024)  # bytes
+        #disk_cache.setCacheDirectory(str(cache_dir))
+        #disk_cache.setMaximumCacheSize(max_cache_mb * 1024 * 1024)  # bytes
+        disk_cache.setCacheDirectory(str(paths.covers_dir))
+        disk_cache.setMaximumCacheSize(paths.covers_max_size_mb * 1024 * 1024)  # bytes 
+
 
         self.nam.setCache(disk_cache)
+
 
     def load(self, url: str) -> None:
         qurl = QUrl(url)
@@ -53,8 +57,10 @@ class ImageLoader(QObject):
 
         reply = self.nam.get(req)
 
+
         def on_error(e):
             print("Qt network error enum:", int(e), "->", reply.errorString())
+
 
         def on_finished():
             status = reply.attribute(QNetworkRequest.HttpStatusCodeAttribute)

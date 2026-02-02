@@ -11,8 +11,8 @@ from urllib.parse import urlparse, parse_qs
 
 import spotipy
 from spotipy.oauth2 import SpotifyPKCE
-from platformdirs import user_cache_dir
-
+#from platformdirs import user_cache_dir
+from app.config.paths import paths
 
 @dataclass(frozen=True)
 class SpotifyDevice:
@@ -46,8 +46,7 @@ class SpotifyService:
         self, 
         client_id: str,
         redirect_uri: str,
-        scope: str,
-        app_name: str = "MacroKeyboardSpotifyInterface"
+        scope: str
     ) -> None:
 
         self._client_id = client_id
@@ -56,9 +55,10 @@ class SpotifyService:
         # normalize scope string (no commas)
         self._scope = " ".join([s.strip() for s in scope.replace(",", " ").split()])
 
-        cache_dir = Path(user_cache_dir(app_name))
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        self._cache_path = str(cache_dir / "spotify_token_cache")
+        #cache_dir = Path(user_cache_dir(app_name))
+        #cache_dir.mkdir(parents=True, exist_ok=True)
+        #self._cache_path = str(cache_dir / "spotify_token_cache")
+        self._cache_path = str(paths.token_cache_path)
 
         self._auth = SpotifyPKCE(
             client_id=self._client_id,
