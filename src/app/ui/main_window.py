@@ -1,11 +1,12 @@
 from PySide6.QtWidgets import QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSizePolicy
 from PySide6.QtCore import Signal, Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QIcon, QPixmap
 
 from app.ui.widgets.background_widget import BackgroundWidget
 from app.ui.player_screen import PlayerScreen
 from app.ui.bindings_screen import BindingsScreen
 from app.core.actions import ActionEvent, ActionKind
+from pathlib import Path
 
 class MainWindow(QMainWindow):
     action_requested = Signal(object)  # UI -> controller
@@ -13,8 +14,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Macro Spotify App")
-
         root = BackgroundWidget("assets/images/knight-at-fire2.png")
+        self.set_icon("assets/ico/lute.ico")
         self.setCentralWidget(root)
 
         change_screen_button = QPushButton("Switch")
@@ -46,14 +47,23 @@ class MainWindow(QMainWindow):
         self.player_screen.set_cover(pix)
 
 
+    def set_icon(self, image_path: str) -> None:
+        proj_dir = Path(__file__).parent.parent.parent # src
+        total_path = Path(proj_dir / image_path).as_posix().replace("\\", "/")
+        app_icon = QIcon(total_path)
+        self.setWindowIcon(app_icon)
+
+
     def switch_screen(self) -> None:
         if self.screen.currentWidget() == self.player_screen:
             self.show_bindings_screen()
         else:
             self.show_player_screen()
 
+
     def show_player_screen(self) -> None:
         self.screen.setCurrentWidget(self.player_screen)
+
 
     def show_bindings_screen(self) -> None:
         self.screen.setCurrentWidget(self.bindings_screen)
