@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QScrollArea, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QPushButton
 from PySide6.QtCore import Qt
 from app.ui.widgets.binding_widget import BindingWidget
 

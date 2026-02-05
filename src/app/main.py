@@ -9,10 +9,8 @@ from app.config.settings import Settings
 from app.config.paths import paths
 from app.ui.main_window import MainWindow
 from app.ui.image_loader import ImageLoader
-from app.core.actions import ActionEvent, ActionKind
-from app.core.controller import AppController, Binding
+from app.core.controller import AppController
 from app.services.spotify_client import SpotifyService
-from app.input.fake_serial import FakeSerialBackend
 from app.input.hotkeys_pynput import HotkeyBackendPynput
 
 
@@ -74,6 +72,9 @@ def main():
     hotkey_backend = HotkeyBackendPynput(hotkey_bindings)
     hotkey_backend.start(lambda action, source: controller.handle_action(action, source))
     
+    # This handles the UI buttons
+    window.action_requested.connect(lambda a: controller.handle_action(a, "ui"))
+
     # show window in background image size
     window.resize(320*3, 180*3)
     window.show()
