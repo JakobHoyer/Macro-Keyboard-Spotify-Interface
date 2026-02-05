@@ -5,6 +5,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
 from pathlib import Path
 
+from app.config.settings import Settings
 from app.config.paths import paths
 from app.ui.main_window import MainWindow
 from app.ui.image_loader import ImageLoader
@@ -24,6 +25,8 @@ def main():
     window = MainWindow()
 
     paths.ensure_directories()
+    settings = Settings(paths)
+    settings.load()
 
     # image loader
     image_loader = ImageLoader()
@@ -43,7 +46,6 @@ def main():
     image_loader.loaded.connect(on_image_loaded)
     image_loader.failed.connect(lambda url, err: print(f"Image load failed for {url}: {err}"))
 
-
     # Run services
     spotify = SpotifyService(
         client_id="4075de68534e4c0c92d89a9c9c21d29f",
@@ -51,12 +53,7 @@ def main():
         scope="user-read-playback-state user-modify-playback-state",
     )
 
-    # Setup bindings. This will be done from a settings / binding window later
-    control_bindings = {
-        1: Binding(type="playlist", uri="spotify:playlist:4zqPelMTbUfaSpAKWHux7M"),
-        2: Binding(type="track", uri="spotify:track:6woV8uWxn7rcLZxJKYruS1"),
-    }
-
+    control_bindings = settings.get_slot_bindings()
 
     # Start action and ui controller
     controller = AppController(
@@ -73,28 +70,9 @@ def main():
     timer.timeout.connect(spotify.ensure_automatic_logging)
     timer.start()
 
-    # Start backends
-    backend = FakeSerialBackend({ # These should be redefined later from bindings
-        ActionEvent(ActionKind.SLOT, 1): "SLOT_1",
-        ActionEvent(ActionKind.SLOT, 2): "SLOT_2",
-        ActionEvent(ActionKind.PLAY_PAUSE): "PLAY_PAUSE",
-        ActionEvent(ActionKind.NEXT): "NEXT",
-        ActionEvent(ActionKind.PREV): "PREV",
-    })
-
-    hotkey_backend = HotkeyBackendPynput({ # These should be redefined later from bindings
-        ActionEvent(ActionKind.SLOT, 1) : "<ctrl>+<alt>+<f1>",
-        ActionEvent(ActionKind.SLOT, 2): "<ctrl>+<alt>+<f2>",
-        ActionEvent(ActionKind.PLAY_PAUSE): "<ctrl>+<alt>+p",
-        ActionEvent(ActionKind.NEXT): "<ctrl>+<alt>+<right>",
-        ActionEvent(ActionKind.PREV): "<ctrl>+<alt>+<left>", 
-    })
-
-    backend.start(lambda action, source: controller.handle_action(action, source))
+    hotkey_bindings = settings.get_hotkey_bindings()
+    hotkey_backend = HotkeyBackendPynput(hotkey_bindings)
     hotkey_backend.start(lambda action, source: controller.handle_action(action, source))
-
-    # Connect UI to the fake serial backend
-    window.action_requested.connect(lambda a: controller.handle_action(a, "ui"))
     
     # show window in background image size
     window.resize(320*3, 180*3)
@@ -102,7 +80,6 @@ def main():
     
     exit_code = app.exec()
 
-    backend.stop()
     sys.exit(exit_code)
 
 

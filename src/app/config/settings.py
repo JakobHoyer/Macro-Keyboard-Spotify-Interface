@@ -9,7 +9,7 @@ from app.config.paths import Paths
 
 class Settings:
     def __init__(self, paths: Paths):
-        self._pahts = paths
+        self._paths = paths
         self.data = None # type dictionary
 
 

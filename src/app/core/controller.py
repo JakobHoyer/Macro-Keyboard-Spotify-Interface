@@ -53,6 +53,7 @@ class AppController:
         """
         try:
             if action.kind == ActionKind.PLAY_PAUSE:
+                print("play pause")
                 self.spotify.toggle_pause_resume_auto()
                 return
 
