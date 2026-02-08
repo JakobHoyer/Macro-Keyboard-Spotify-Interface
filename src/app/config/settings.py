@@ -29,7 +29,7 @@ class Settings:
     
     def default(self) -> Dict:
         return {
-            "bindings": {
+            "hotkeys": {
                 "<ctrl>+<alt>+p": {"kind": "play_pause"},
                 "<ctrl>+<alt>+<f1>": {"kind": "slot", "slot_id": 1},
                 "<ctrl>+<alt>+<f2>": {"kind": "slot", "slot_id": 2},
@@ -43,7 +43,7 @@ class Settings:
 
     def get_hotkey_bindings(self) -> Dict[ActionEvent, str]:
         converted = {}
-        for key, value in self.data["bindings"].items():
+        for key, value in self.data["hotkeys"].items():
             kind = value["kind"]
             slot_id = value.get("slot_id")
             action_event = ActionEvent(

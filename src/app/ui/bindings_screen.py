@@ -1,15 +1,18 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QPushButton
 from PySide6.QtCore import Qt
+
 from app.ui.widgets.binding_widget import BindingWidget
+from app.config.settings import Settings
 
 class BindingsScreen(QWidget):
-    def __init__(self):
+    def __init__(self, settings: Settings):
         super().__init__()
         self.setMaximumWidth(400)
         self.layout = QVBoxLayout(self)
         self.scroll = QScrollArea()
         self.widget = QWidget()
         self.vbox = QVBoxLayout()
+        self._settings = settings # load in bindings
 
         create_button = QPushButton("Create New Binding")
         create_button.setFixedSize(150, 36)
@@ -24,10 +27,27 @@ class BindingsScreen(QWidget):
 
         self.widget.setLayout(self.vbox)
 
-        for i in range(1,10):
-            object = BindingWidget("Binding "+str(i), "Action "+str(i),"Key "+str(i))
-            self.vbox.addWidget(object)
+        # instead read settings and put in bindings.
+        self.populate_scroll_window()
+
+        # for i in range(1,10):
+        #     object = BindingWidget("Binding "+str(i), "Action "+str(i),"Key "+str(i))
+        #     self.vbox.addWidget(object)
     
+
     def create_binding_widget(self, binding_name: str, action_assigned: str, key_assigned: str) -> None:
         binding_widget = BindingWidget(binding_name, action_assigned, key_assigned)
         self.vbox.insertWidget(0, binding_widget)
+        # save to json
+
+    def populate_scroll_window(self):
+        _slots = self._settings.data["slots"]
+        for hotkey, action in self._settings.data["hotkeys"].items():
+            object = BindingWidget(
+                hotkey=hotkey,
+                action=action,
+                slots=_slots
+            )
+            self.vbox.addWidget(object)
+
+        

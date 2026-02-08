@@ -11,7 +11,6 @@ from urllib.parse import urlparse, parse_qs
 
 import spotipy
 from spotipy.oauth2 import SpotifyPKCE
-#from platformdirs import user_cache_dir
 from app.config.paths import paths
 
 @dataclass(frozen=True)
@@ -54,12 +53,7 @@ class SpotifyService:
 
         # normalize scope string (no commas)
         self._scope = " ".join([s.strip() for s in scope.replace(",", " ").split()])
-
-        #cache_dir = Path(user_cache_dir(app_name))
-        #cache_dir.mkdir(parents=True, exist_ok=True)
-        #self._cache_path = str(cache_dir / "spotify_token_cache")
         self._cache_path = str(paths.token_cache_path)
-
         self._auth = SpotifyPKCE(
             client_id=self._client_id,
             redirect_uri=self._redirect_uri,
@@ -126,6 +120,8 @@ class SpotifyService:
 
         # Exchange the code to token (written in cache_path)
         self._auth.get_access_token(code)
+        self._sp = None
+        self._ensure_client()
 
 
     def get_logged_in_state(self) -> LoginState: 
@@ -157,10 +153,20 @@ class SpotifyService:
         if not code:
             raise ValueError("Could not parse authorization code from redirected URL.")
         
-        token_info = self._auth.get_access_token(code)
-        access_token = token_info["access_token"] if isinstance(token_info, dict) else token_info
+
+        # writes token_info (and refresh token) to cache
+        self._auth.get_access_token(code)
+
+        # build client using auth_manager (auto refresh)
+        self._sp = None
+        self._ensure_client()
+
+        # token_info = self._auth.get_access_token(code)
+        # access_token = token_info["access_token"] if isinstance(token_info, dict) else token_info
         
-        self._sp = spotipy.Spotify(auth=access_token)
+        # self._sp = spotipy.Spotify(auth=access_token)
+        
+
 
 
     def list_devices(self) -> List[SpotifyDevice]:
@@ -339,8 +345,8 @@ class SpotifyService:
         if not token_info:
             raise RuntimeError("User is not logged in. Call get_login_state() and finish_login() first.")
         
-        access_token = token_info["access_token"] if isinstance(token_info, dict) else token_info
-        self._sp = spotipy.Spotify(auth=access_token)
+        #access_token = token_info["access_token"] if isinstance(token_info, dict) else token_info
+        self._sp = spotipy.Spotify(auth_manager=self._auth)
         return self._sp
     
 

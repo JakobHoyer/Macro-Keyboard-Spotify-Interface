@@ -17,14 +17,19 @@ from app.input.hotkeys_pynput import HotkeyBackendPynput
 def main():
     set_app_id("JakobHoyer.MacroKeyboardSpotifyInterface")
     app = QApplication(sys.argv)
-    # app icon might be redundant with main window icon
-    icon_path = Path(__file__).parent.parent.parent / "assets" / "ico" / "lute.ico"
-    app.setWindowIcon(QIcon(str(icon_path)))
-    window = MainWindow()
-
+    
+    
     paths.ensure_directories()
     settings = Settings(paths)
     settings.load()
+
+    # app icon might be redundant with main window icon
+    icon_path = Path(__file__).parent.parent.parent / "assets" / "ico" / "lute.ico" # should use paths instead probably.
+    app.setWindowIcon(QIcon(str(icon_path)))
+    
+    window = MainWindow(settings)
+
+
 
     # image loader
     image_loader = ImageLoader()
@@ -51,12 +56,12 @@ def main():
         scope="user-read-playback-state user-modify-playback-state",
     )
 
-    control_bindings = settings.get_slot_bindings()
+    slot_bindings = settings.get_slot_bindings()
 
     # Start action and ui controller
     controller = AppController(
         spotify_service=spotify,
-        control_bindings=control_bindings,
+        control_bindings=slot_bindings,
         set_status=window.set_status,
         set_error=window.set_error,
         set_cover_url=set_cover_url,
