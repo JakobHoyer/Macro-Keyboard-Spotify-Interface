@@ -20,8 +20,8 @@ class Settings:
         else:
             with open(self._paths.settings_path, "r", encoding="utf-8") as f:
                 self.data = json.load(f)
-                correct_settigngs: bool = self.ensure_correct_settings()
-                if not correct_settigngs:
+                corrected_settigngs: bool = self.ensure_correct_settings()
+                if corrected_settigngs:
                     print("Settings have been changed to default values, because some keys were missing.")
                     # we should make a popup.
 
