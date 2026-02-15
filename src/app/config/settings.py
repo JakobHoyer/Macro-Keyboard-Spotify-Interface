@@ -20,6 +20,10 @@ class Settings:
         else:
             with open(self._paths.settings_path, "r", encoding="utf-8") as f:
                 self.data = json.load(f)
+                correct_settigngs: bool = self.ensure_correct_settings()
+                if not correct_settigngs:
+                    print("Settings have been changed to default values, because some keys were missing.")
+                    # we should make a popup.
 
 
     def save(self):
@@ -39,6 +43,20 @@ class Settings:
                     "2": {"type": "playlist", "uri": "spotify:playlist:4zqPelMTbUfaSpAKWHux7M"},
             },
         }
+
+
+    def ensure_correct_settings(self) -> bool:
+        # check if hotkeys and slots are in settings, if not create them with default values
+        changed = False
+        if "hotkeys" not in self.data:
+            self.data["hotkeys"] = self.default()["hotkeys"]
+            changed = True
+            self.save()
+        if "slots" not in self.data:
+            self.data["slots"] = self.default()["slots"]
+            changed = True
+            self.save()
+        return changed
 
 
     def get_hotkey_bindings(self) -> Dict[ActionEvent, str]:
