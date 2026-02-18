@@ -14,20 +14,27 @@ class EditWidget(QWidget):
         self.layout = QVBoxLayout(self)
 
         self._old_hotkey = self._binding._hotkey
-
-        self.layout.addWidget(QLabel("Hotkey:").setStyleSheet("color: white;"))
+        hotkey_label = QLabel("Hotkey:")
+        hotkey_label.setStyleSheet("color: white;")
+        self.layout.addWidget(hotkey_label)
         self.hotkey_input = QLineEdit(self._binding._hotkey)
         self.layout.addWidget(self.hotkey_input)
 
-        self.layout.addWidget(QLabel("Action kind:").setStyleSheet("color: white;"))
+        action_label = QLabel("Action kind:")
+        action_label.setStyleSheet("color: white;")
+        self.layout.addWidget(action_label)
         self.kind_input = QLineEdit(self._binding._action.get("kind", ""))
         self.layout.addWidget(self.kind_input)
 
-        self.layout.addWidget(QLabel("Slot id:").setStyleSheet("color: white;"))
+        slot_id_label = QLabel("Slot id:")
+        slot_id_label.setStyleSheet("color: white;")
+        self.layout.addWidget(slot_id_label)
         self.slot_id_input = QLineEdit(str(self._binding._action.get("slot_id", "")))
         self.layout.addWidget(self.slot_id_input)
 
-        self.layout.addWidget(QLabel("Spotify URI:").setStyleSheet("color: white;"))
+        spotify_uri_label = QLabel("Spotify URI:")
+        spotify_uri_label.setStyleSheet("color: white;")
+        self.layout.addWidget(spotify_uri_label)
         slot_id = self._binding._action.get("slot_id")
         uri = ""
         if slot_id is not None:
@@ -49,6 +56,7 @@ class EditWidget(QWidget):
         btn_save.clicked.connect(self.save)
         btn_cancel.clicked.connect(self._on_cancel)
         btn_delete.clicked.connect(self._on_delete)
+
 
     def save(self):
         new_hotkey = self.hotkey_input.text().strip()
