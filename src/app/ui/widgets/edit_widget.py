@@ -1,47 +1,53 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton
+from PySide6.QtWidgets import QWidget, QComboBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton
+
+from app.core.binding_model import BindingModel
 from app.ui.widgets.binding_widget import BindingWidget
 from app.config.settings import Settings
+
 
 class EditWidget(QWidget):
     def __init__(self, binding_widget: BindingWidget, settings: Settings, on_saved, on_cancel, on_delete):
         super().__init__()
         self._settings = settings
         self._binding = binding_widget
+        self._model = binding_widget._model
         self._on_saved = on_saved
         self._on_cancel = on_cancel
         self._on_delete = on_delete
 
         self.layout = QVBoxLayout(self)
 
-        self._old_hotkey = self._binding._hotkey
+        self._old_hotkey = self._model.hotkey
+
         hotkey_label = QLabel("Hotkey:")
         hotkey_label.setStyleSheet("color: white;")
         self.layout.addWidget(hotkey_label)
-        self.hotkey_input = QLineEdit(self._binding._hotkey)
+
+        self.hotkey_input = QLineEdit(self._model.hotkey)
         self.layout.addWidget(self.hotkey_input)
 
-        action_label = QLabel("Action kind:")
+        action_list = ["Play/Pause", "Next song", "Previous song", "Play playlist/song from link below"]
+        action_label = QLabel("Action type:")
         action_label.setStyleSheet("color: white;")
         self.layout.addWidget(action_label)
-        self.kind_input = QLineEdit(self._binding._action.get("kind", ""))
-        self.layout.addWidget(self.kind_input)
+
+        self.combobox = QComboBox()
+        self.combobox.addItems(action_list)
+        self.layout.addWidget(self.combobox)
+        self._set_combobox_from_kind(self._model.kind)
 
         slot_id_label = QLabel("Slot id:")
         slot_id_label.setStyleSheet("color: white;")
         self.layout.addWidget(slot_id_label)
-        self.slot_id_input = QLineEdit(str(self._binding._action.get("slot_id", "")))
+
+        self.slot_id_input = QLineEdit("" if self._model.slot_id is None else str(self._model.slot_id))
         self.layout.addWidget(self.slot_id_input)
 
         spotify_uri_label = QLabel("Spotify URI:")
         spotify_uri_label.setStyleSheet("color: white;")
         self.layout.addWidget(spotify_uri_label)
-        slot_id = self._binding._action.get("slot_id")
-        uri = ""
-        if slot_id is not None:
-            slot = self._binding._slots.get(str(slot_id))
-            if slot:
-                uri = slot.get("uri", "")
-        self.uri_input = QLineEdit(uri)
+
+        self.uri_input = QLineEdit(self._model.uri)
         self.layout.addWidget(self.uri_input)
 
         btn_row = QHBoxLayout()
@@ -58,34 +64,46 @@ class EditWidget(QWidget):
         btn_delete.clicked.connect(self._on_delete)
 
 
+    def _set_combobox_from_kind(self, kind: str):
+        mapping = {
+            "play_pause": 0,
+            "next": 1,
+            "prev": 2,
+            "slot": 3,
+        }
+        self.combobox.setCurrentIndex(mapping.get(kind, 3))
+
+
     def save(self):
         new_hotkey = self.hotkey_input.text().strip()
-        kind = self.kind_input.text().strip() or "slot"
+        kind = self.get_combobox_value()
 
-        new_action = {"kind": kind}
-
-        new_slots = self._settings.data["slots"]
+        slot_id = None
+        slot_type = ""
+        uri = ""
 
         if kind == "slot":
             slot_id_text = self.slot_id_input.text().strip()
             if slot_id_text.isdigit():
                 slot_id = int(slot_id_text)
-                new_action["slot_id"] = slot_id
-
                 uri = self.uri_input.text().strip()
 
-                # make sure slot exists in settings
-                if str(slot_id) not in new_slots:
-                    new_slots[str(slot_id)] = {"type": "track", "uri": uri}
-                else:
-                    new_slots[str(slot_id)]["uri"] = uri
+                existing_slot = self._settings.data["slots"].get(str(slot_id), {})
+                slot_type = existing_slot.get("type", "track")
 
-        # Update settings hotkeys: rename key if hotkey changes
-        hotkeys = self._settings.data["hotkeys"]
-        if self._old_hotkey in hotkeys:
-            del hotkeys[self._old_hotkey]
-        hotkeys[new_hotkey] = new_action
+        new_model = BindingModel(
+            hotkey=new_hotkey,
+            kind=kind,
+            slot_id=slot_id,
+            slot_type=slot_type,
+            uri=uri,
+        )
 
-        self._settings.save()
+        self._on_saved(self._binding, self._old_hotkey, new_model)
 
-        self._on_saved(self._binding, self._old_hotkey, new_hotkey, new_action, new_slots)
+
+    def get_combobox_value(self) -> str:
+        translation_list = ["play_pause", "next", "prev", "slot"]
+        kindid = self.combobox.currentIndex()
+        value = translation_list[kindid].strip()
+        return value

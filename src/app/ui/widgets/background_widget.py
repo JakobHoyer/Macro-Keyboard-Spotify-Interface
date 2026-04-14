@@ -11,9 +11,9 @@ class BackgroundWidget(QWidget):
         
         self._bg = QPixmap(total_path)
 
-        # Layout til dine normale widgets ovenpå
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(12, 12, 12, 12)
+
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -23,8 +23,7 @@ class BackgroundWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
         
-        # "cover": fyld hele widgeten, crop hvis nødvendigt
-        scaled = self._bg.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+        scaled = self._bg.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.FastTransformation)
 
         x = (self.width() - scaled.width()) // 2
         y = (self.height() - scaled.height()) // 2

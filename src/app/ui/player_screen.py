@@ -3,6 +3,7 @@ from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPixmap
 
 from app.core.actions import ActionEvent, ActionKind
+from app.ui.widgets.pixel_art_button import PixelArtButton
 
 class PlayerScreen(QWidget):
     action_requested = Signal(object)  # UI -> controller
@@ -22,20 +23,35 @@ class PlayerScreen(QWidget):
         self.cover.setAlignment(Qt.AlignCenter)
         self.cover.setFixedSize(180, 180)
 
-        btn_prev = QPushButton("◀")
-        btn_play = QPushButton("⏯")
-        btn_next = QPushButton("▶")
+        btn_prev = PixelArtButton(
+            "src/assets/images/base_button.png", 
+            "src/assets/images/base_button_hover.png",
+            "src/assets/images/base_button_pressed.png",
+            padding=0,
+            integer_scale=False)
+        btn_play = PixelArtButton(
+            "src/assets/images/base_button.png", 
+            "src/assets/images/base_button_hover.png",
+            "src/assets/images/base_button_pressed.png",
+            padding=0,
+            integer_scale=False)
+        btn_next = PixelArtButton(
+            "src/assets/images/base_button.png", 
+            "src/assets/images/base_button_hover.png",
+            "src/assets/images/base_button_pressed.png",
+            padding=0,
+            integer_scale=False)
 
-        btn_prev.setFixedSize(52, 40)
-        btn_play.setFixedSize(68, 40)
-        btn_next.setFixedSize(52, 40)
+        btn_prev.setFixedSize(52, 52)
+        btn_play.setFixedSize(52, 52)
+        btn_next.setFixedSize(52, 52)
 
         btn_prev.clicked.connect(lambda: self.action_requested.emit(ActionEvent(ActionKind.PREV)))
         btn_play.clicked.connect(lambda: self.action_requested.emit(ActionEvent(ActionKind.PLAY_PAUSE)))
         btn_next.clicked.connect(lambda: self.action_requested.emit(ActionEvent(ActionKind.NEXT)))
 
         outer_layout = QHBoxLayout(self)
-        outer_layout.setContentsMargins(2, 2, 2, 2)
+        outer_layout.setContentsMargins(1, 1, 1, 1)
         
         panel = QWidget()
         buttons_layout = QHBoxLayout()
@@ -43,7 +59,7 @@ class PlayerScreen(QWidget):
         #outer_layout.addStretch(1)
         panel.setFixedWidth(180)
         panel_layout = QVBoxLayout(panel)
-        panel_layout.addStretch()
+        panel_layout.addStretch(1)
         panel_layout.setSpacing(6)
         panel_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -51,6 +67,7 @@ class PlayerScreen(QWidget):
         buttons_layout.addWidget(btn_prev)
         buttons_layout.addWidget(btn_play)
         buttons_layout.addWidget(btn_next)
+        #buttons_layout.setContentsMargins(0, 0, 0, 0)
         buttons_layout.setAlignment(Qt.AlignCenter)
 
         panel_layout.addWidget(self.status)

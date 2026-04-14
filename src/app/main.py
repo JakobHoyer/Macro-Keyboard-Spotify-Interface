@@ -76,7 +76,9 @@ def main():
     hotkey_bindings = settings.get_hotkey_bindings()
     hotkey_backend = HotkeyBackendPynput(hotkey_bindings)
     hotkey_backend.start(lambda action, source: controller.handle_action(action, source))
-    
+    window.set_runtime_dependencies(controller, hotkey_backend)
+    window.bindings_screen.bindingsChanged.connect(window.reload_bindings)
+
     # This handles the UI buttons
     window.action_requested.connect(lambda a: controller.handle_action(a, "ui"))
 
