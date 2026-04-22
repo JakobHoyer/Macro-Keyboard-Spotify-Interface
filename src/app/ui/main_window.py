@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QStackedWidget, QPushButton
+from PySide6.QtWidgets import QMainWindow, QStackedWidget
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QIcon, QPixmap
 from pathlib import Path
@@ -11,7 +11,7 @@ from app.config.settings import Settings
 
 
 class MainWindow(QMainWindow):
-    action_requested = Signal(object)  # UI -> controller
+    action_requested = Signal(object)
 
     def __init__(self, settings: Settings):
         super().__init__()
@@ -24,11 +24,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(root)
 
         change_screen_button = PixelArtButton(
-            "src/assets/images/settings_button.png", 
+            "src/assets/images/settings_button.png",
             "src/assets/images/settings_hover.png",
             "src/assets/images/settings_pressed.png",
             padding=0,
-            integer_scale=False)
+            integer_scale=False,
+        )
         change_screen_button.setFixedSize(72, 72)
         change_screen_button.clicked.connect(self.switch_screen)
         root.layout.addWidget(change_screen_button, alignment=Qt.AlignTop | Qt.AlignRight)
@@ -44,30 +45,24 @@ class MainWindow(QMainWindow):
 
         self.player_screen.action_requested.connect(self.action_requested.emit)
 
-
     def set_runtime_dependencies(self, controller, hotkey_backend) -> None:
         self._controller = controller
         self._hotkey_backend = hotkey_backend
 
-
     def set_status(self, text: str) -> None:
         self.player_screen.set_status(f"{text}")
-
 
     def set_error(self, text: str) -> None:
         self.player_screen.set_error(text)
 
-
     def set_cover(self, pix: QPixmap) -> None:
         self.player_screen.set_cover(pix)
 
-
     def set_icon(self, image_path: str) -> None:
-        proj_dir = Path(__file__).parent.parent.parent # src
+        proj_dir = Path(__file__).parent.parent.parent
         total_path = Path(proj_dir / image_path).as_posix().replace("\\", "/")
         app_icon = QIcon(total_path)
         self.setWindowIcon(app_icon)
-
 
     def switch_screen(self) -> None:
         if self.screen.currentWidget() == self.player_screen:
@@ -75,29 +70,21 @@ class MainWindow(QMainWindow):
         else:
             self.show_player_screen()
 
-
     def show_player_screen(self) -> None:
         self.screen.setCurrentWidget(self.player_screen)
-
 
     def show_bindings_screen(self) -> None:
         self.screen.setCurrentWidget(self.bindings_screen)
 
-
-    def handle_hotkey_action(self, action) -> None:
+    def handle_hotkey_action(self, binding) -> None:
         if self._controller is not None:
-            self._controller.handle_action(action, "hotkeys")
-
+            self._controller.handle_binding(binding, "hotkeys")
 
     def reload_bindings(self) -> None:
-        if self._controller is not None:
-            slot_bindings = self._settings.get_slot_bindings()
-            self._controller.update_bindings(slot_bindings)
-
-        if self._hotkey_backend is not None:
+        if self._hotkey_backend is not None and self._controller is not None:
             hotkey_bindings = self._settings.get_hotkey_bindings()
             self._hotkey_backend.stop()
             self._hotkey_backend._bindings = hotkey_bindings
             self._hotkey_backend.start(
-                lambda action, source: self._controller.handle_action(action, source)
+                lambda binding, source: self._controller.handle_binding(binding, source)
             )

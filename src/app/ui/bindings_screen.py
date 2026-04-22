@@ -6,6 +6,7 @@ from app.ui.widgets.edit_widget import EditWidget
 from app.config.settings import Settings
 from app.core.binding_model import BindingModel
 
+
 class BindingsScreen(QWidget):
     bindingsChanged = Signal()
 
@@ -15,7 +16,6 @@ class BindingsScreen(QWidget):
 
         self.layout = QHBoxLayout(self)
 
-        # venstre: binding liste
         self.binding_layout = QVBoxLayout()
         self.scroll = QScrollArea()
         self.scroll.setMaximumWidth(400)
@@ -33,7 +33,6 @@ class BindingsScreen(QWidget):
         self.binding_layout.addWidget(self.scroll)
         self.layout.addLayout(self.binding_layout)
 
-        # højre: editor (én ad gangen)
         self.editor_layout = QVBoxLayout()
         self.layout.addStretch()
         self.layout.addLayout(self.editor_layout)
@@ -43,58 +42,36 @@ class BindingsScreen(QWidget):
 
         self.populate_scroll_window()
 
-
-    def _build_model(self, hotkey: str, action: dict) -> BindingModel:
-        kind = action.get("kind", "")
-        slot_id = action.get("slot_id")
-
-        slot_type = ""
-        uri = ""
-
-        if kind == "slot" and slot_id is not None:
-            slot = self._settings.data["slots"].get(str(slot_id), {})
-            slot_type = slot.get("type", "")
-            uri = slot.get("uri", "")
-
-        return BindingModel(
-            hotkey=hotkey,
-            kind=kind,
-            slot_id=slot_id,
-            slot_type=slot_type,
-            uri=uri,
-        )
-
-
     def populate_scroll_window(self):
-        for hotkey, action in self._settings.data["hotkeys"].items():
-            model = self._build_model(hotkey, action)
+        self._clear_binding_list()
+
+        for model in self._settings.get_bindings():
             w = BindingWidget(model)
             w.editRequested.connect(self.open_editor_for)
             w.deleteRequested.connect(self.delete_binding)
             self.vbox.addWidget(w)
 
-
     def create_new_binding(self):
-        model = BindingModel(
-            hotkey="New Hotkey",
-            kind="slot",
-            slot_id=1,
-            slot_type="track",
-            uri="",
-        )
+        model = BindingModel.new_user()
         w = BindingWidget(model)
         w.editRequested.connect(self.open_editor_for)
         w.deleteRequested.connect(self.delete_binding)
         self.vbox.insertWidget(0, w)
         self.open_editor_for(w)
 
+    def _clear_binding_list(self):
+        while self.vbox.count():
+            item = self.vbox.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()
 
     def _clear_editor(self):
         if self._current_editor:
             self._current_editor.setParent(None)
             self._current_editor.deleteLater()
             self._current_editor = None
-
 
     def open_editor_for(self, binding_widget: BindingWidget):
         self._current_binding = binding_widget
@@ -109,50 +86,45 @@ class BindingsScreen(QWidget):
         )
         self.editor_layout.addWidget(self._current_editor)
 
+    def on_binding_saved(self, binding_widget: BindingWidget, new_model: BindingModel):
+        bindings = self._settings.get_bindings()
 
-    def on_binding_saved(self, binding_widget: BindingWidget, old_hotkey: str, new_model: BindingModel):
-        hotkeys = self._settings.data["hotkeys"]
-        slots = self._settings.data["slots"]
+        updated_bindings = []
+        replaced = False
 
-        if old_hotkey in hotkeys:
-            del hotkeys[old_hotkey]
+        for binding in bindings:
+            if binding.id == new_model.id:
+                updated_bindings.append(new_model)
+                replaced = True
+                continue
 
-        new_action = {"kind": new_model.kind}
+            if new_model.hotkey and binding.hotkey == new_model.hotkey and binding.id != new_model.id:
+                continue
 
-        if new_model.kind == "slot" and new_model.slot_id is not None:
-            new_action["slot_id"] = new_model.slot_id
+            updated_bindings.append(binding)
 
-            if str(new_model.slot_id) not in slots:
-                slots[str(new_model.slot_id)] = {
-                    "type": new_model.slot_type or "track",
-                    "uri": new_model.uri,
-                }
-            else:
-                slots[str(new_model.slot_id)]["uri"] = new_model.uri
-                if new_model.slot_type:
-                    slots[str(new_model.slot_id)]["type"] = new_model.slot_type
+        if not replaced:
+            updated_bindings.append(new_model)
 
-        hotkeys[new_model.hotkey] = new_action
-
+        self._settings.set_bindings(updated_bindings)
         self._settings.save()
-        binding_widget.apply_changes(new_model)
+
+        self.populate_scroll_window()
         self.bindingsChanged.emit()
         self._clear_editor()
 
-
     def delete_binding(self, binding_widget):
-        hotkey = binding_widget._model.hotkey
+        binding_id = binding_widget._model.id
 
-        # Fjern fra settings
-        hotkeys = self._settings.data["hotkeys"]
-        if hotkey in hotkeys:
-            del hotkeys[hotkey]
+        bindings = [
+            binding
+            for binding in self._settings.get_bindings()
+            if binding.id != binding_id
+        ]
 
+        self._settings.set_bindings(bindings)
         self._settings.save()
 
-        # Fjern fra UI
-        binding_widget.setParent(None)
-        binding_widget.deleteLater()
-
+        self.populate_scroll_window()
         self.bindingsChanged.emit()
         self._clear_editor()

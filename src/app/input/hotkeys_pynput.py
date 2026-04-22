@@ -1,11 +1,12 @@
 from __future__ import annotations
 import os
-from typing import Callable, Dict
+from typing import Callable
 from functools import partial
+
 from pynput import keyboard
 
 from .base import InputBackend
-from ..core.actions import ActionEvent
+from ..core.binding_model import BindingModel
 
 
 class HotkeyBackendPynput(InputBackend):
@@ -14,12 +15,12 @@ class HotkeyBackendPynput(InputBackend):
     On Linux it's mainly viable on X11. On Wayland it may not work.
     """
 
-    def __init__(self, bindings: Dict[ActionEvent, str]) -> None:
+    def __init__(self, bindings: dict[str, BindingModel]) -> None:
         """
         bindings example:
           {
-            ActionEvent(ActionKind.SLOT, 1): "<ctrl>+<alt>+<f1>",
-            ActionEvent(ActionKind.PLAY_PAUSE): "<f13>",
+            "<ctrl>+<alt>+<f1>": BindingModel(...),
+            "<ctrl>+<alt>+p": BindingModel(...),
           }
         """
         self._bindings = bindings
@@ -28,16 +29,17 @@ class HotkeyBackendPynput(InputBackend):
     def is_supported(self) -> bool:
         if os.name == "nt":
             return True
-        # Linux: only reliably on X11
         return os.environ.get("XDG_SESSION_TYPE", "").lower() != "wayland"
 
-    def start(self, emit: Callable[[ActionEvent, str], None]) -> None:
+    def start(self, emit: Callable[[BindingModel, str], None]) -> None:
         if not self.is_supported():
             raise RuntimeError("Hotkey backend not supported in this environment")
 
-        hotkey_map = {hotkey: partial(emit, action, "hotkeys") for action, hotkey in self._bindings.items()}
+        hotkey_map = {
+            hotkey: partial(emit, binding, "hotkeys")
+            for hotkey, binding in self._bindings.items()
+        }
 
-        # GlobalHotKeys expects strings like "<ctrl>+<alt>+p"
         self._listener = keyboard.GlobalHotKeys(hotkey_map)
         self._listener.start()
 
